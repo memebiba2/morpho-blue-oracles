@@ -1,23 +1,33 @@
-name: Foundry
+name: Foundry CI
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
 
 env:
   FOUNDRY_PROFILE: ci
 
 jobs:
-  check:
-    name: forge-test
+  forge-tests:
+    name: Forge Tests
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
         with:
           submodules: recursive
+
+      - name: Cache Foundry dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.foundry
+          key: ${{ runner.os }}-foundry-${{ hashFiles('**/*.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-foundry-
 
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -36,3 +46,5 @@ jobs:
         id: test
         env:
           ETH_RPC_URL: ${{ secrets.ETH_RPC_URL }}
+        continue-on-error: false # Ensure this fails the job if tests fail
+
